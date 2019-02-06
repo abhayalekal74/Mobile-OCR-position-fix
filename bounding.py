@@ -23,7 +23,7 @@ def merge_bounds(bounds):
 	for b in bounds:
 		rect_bottoms.append(b.bottom)
 
-	rect_bottoms = sorted(rect_bottoms) # Sorting the rectangle bottoms in asc order
+	rect_bottoms = sorted(set(rect_bottoms)) # Sorting the rectangle bottoms in asc order
 
 	bounds.sort(key=lambda x: x.top) # Sorting bounds on rectangle tops, to batch all tops less than a rect bottom
 
@@ -36,24 +36,42 @@ def merge_bounds(bounds):
 		while bounds_counter < len(bounds) and rect_bottoms[rect_bot_counter] >= bounds[bounds_counter].top:
 			batches.append(bounds[bounds_counter])
 			bounds_counter += 1
-		
-		batched_bounds.append([rect_bottoms[rect_bot_counter], bounds[bounds_counter - 1].top, batches]) # Adding this to the list of batches of top
+		if len(batches) > 0:
+			batched_bounds.append([rect_bottoms[rect_bot_counter], bounds[bounds_counter - 1].top, batches]) # Adding this to the list of batches of top
 		rect_bot_counter += 1
 
-	merged_batch_bounds = list() # Merging bottoms with a difference of < 10 and the bottoms without any top batches with top batches of current bottom
-	i = 0
+	print ("batched bounds")
+	for b in batched_bounds:
+		print (b[0], b[1])
+		[v.print() for v in b[2]]
+		print ()
+
+	# Merge fractions if present
+	merged_batch_bounds = list()
+	i = 0 
 	while i < len(batched_bounds):
-		if len(batched_bounds[i][2]) > 0: # If there are tops less than this bottom, add it to merged_batch_bounds
-			merged_batch_bounds.append(batched_bounds[i][2])
-		else:
-			while len(batched_bounds[i][2]) == 0: # If there are no top batches for a bottom, continue to next bottom
+		cur_merged_batch = list()
+		cur_merged_batch += batched_bounds[i][2]
+		j = i + 1
+		while j < len(batched_bounds):
+			cur_batch_max_bottom = max([b.bottom for b in cur_merged_batch])
+			next_batch_min_top = min([b.top for b in batched_bounds[j][2]])
+			if (next_batch_min_top - cur_batch_max_bottom) < VERTICAL_THRES:
+				cur_merged_batch += batched_bounds[j][2]
+				j += 1
 				i += 1
-			merged_batch_bounds[-1] += batched_bounds[i][2]
-			cur_i = i
-			while (i + 1) < len(batched_bounds) and (abs(batched_bounds[i + 1][1] - batched_bounds[cur_i][1]) < VERTICAL_THRES): # If the difference between the tops if less than 10 for two bottoms, merge them
-				i += 1
-				merged_batch_bounds[-1] += batched_bounds[i][2]
+			else:
+				break
+		if len(cur_merged_batch) > 0:
+			merged_batch_bounds.append(cur_merged_batch)
 		i += 1
+
+	print ("\nMerged batch bounds\n")
+	for batch in merged_batch_bounds:
+		for b in batch:
+			b.print()
+		print ()
+
 
 	"""
 	Ordering words within a line
@@ -78,6 +96,13 @@ def merge_bounds(bounds):
 				if len(cur_batch) > 0:
 					x_ordered_batches.append(cur_batch) # Add the current batch to x_ordered_batches
 
+
+	print ("\nx_ordered_batches bounds\n")
+	for batch in x_ordered_batches:
+		for b in batch:
+			b.print()
+		print ()
+
 	# Arrange overlapping groups of words in order of y (for fractions, to maintain order)
 	# Numerator and denominator should already be grouped as one batch each
 	# So just checking the consecutive batches should suffice because not more than two batches can overlap on x axis (numerator and denominator)
@@ -101,16 +126,19 @@ def merge_bounds(bounds):
 				x_y_ordered_batches.append(x_ordered_batches[i + 1])
 			i += 2 # Because, both numerator and denominator batches have been processed
 		else: 
-			x_ordered_batches.append(x_ordered_batches[i])
+			x_y_ordered_batches.append(x_ordered_batches[i])
 			i += 1 # No overlap, move on to the next word
 		
 		if (i == len(x_ordered_batches) - 1): # If only last batch is remaining
 			x_y_ordered_batches.append(x_ordered_batches[i])
 
+	print ("\nFinal Output\n")
+
 	for batch in x_y_ordered_batches:
 		for b in batch:
 			b.print()
-		print ()		
+		print ()
+
 			
 if __name__=='__main__':
 	import sys
@@ -120,5 +148,8 @@ if __name__=='__main__':
 		vals = l.split(",")
 		rect_bounds = [int(i) for i in vals[1:]]
 		bounds.append(Bound(vals[0], rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
+	print ("\nInput Bounds",)
+	[b.print() for b in bounds]
+	print ("\n\n")
 	merge_bounds(bounds)
 
