@@ -9,6 +9,6 @@ br_right = bounding rectangle's right
 br_bottom = bounding rectangle's bottom
 
 
-<word1>,<br_left>,<br_top>,<br_right>,<br_bottom>
-<word2>,<br_left>,<br_top>,<br_right>,<br_bottom>
-<word3>,<br_left>,<br_top>,<br_right>,<br_bottom>
+<recognized_word1>,<br_left>,<br_top>,<br_right>,<br_bottom>
+<recognized_word2>,<br_left>,<br_top>,<br_right>,<br_bottom>
+<recognized_word3>,<br_left>,<br_top>,<br_right>,<br_bottom>
