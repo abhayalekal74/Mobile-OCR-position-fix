@@ -40,12 +40,6 @@ def merge_bounds(bounds):
 			batched_bounds.append([rect_bottoms[rect_bot_counter], bounds[bounds_counter - 1].top, batches]) # Adding this to the list of batches of top
 		rect_bot_counter += 1
 
-	print ("batched bounds")
-	for b in batched_bounds:
-		print (b[0], b[1])
-		[v.print() for v in b[2]]
-		print ()
-
 	# Merge fractions if present
 	merged_batch_bounds = list()
 	i = 0 
@@ -65,13 +59,6 @@ def merge_bounds(bounds):
 		if len(cur_merged_batch) > 0:
 			merged_batch_bounds.append(cur_merged_batch)
 		i += 1
-
-	print ("\nMerged batch bounds\n")
-	for batch in merged_batch_bounds:
-		for b in batch:
-			b.print()
-		print ()
-
 
 	"""
 	Ordering words within a line
@@ -95,13 +82,6 @@ def merge_bounds(bounds):
 							cur_batch.append(batched_bound[j]) # Add it to current batch of words with similar top and bottom
 				if len(cur_batch) > 0:
 					x_ordered_batches.append(cur_batch) # Add the current batch to x_ordered_batches
-
-
-	print ("\nx_ordered_batches bounds\n")
-	for batch in x_ordered_batches:
-		for b in batch:
-			b.print()
-		print ()
 
 	# Arrange overlapping groups of words in order of y (for fractions, to maintain order)
 	# Numerator and denominator should already be grouped as one batch each
@@ -148,8 +128,5 @@ if __name__=='__main__':
 		vals = l.split(",")
 		rect_bounds = [int(i) for i in vals[1:]]
 		bounds.append(Bound(vals[0], rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
-	print ("\nInput Bounds",)
-	[b.print() for b in bounds]
-	print ("\n\n")
 	merge_bounds(bounds)
 
