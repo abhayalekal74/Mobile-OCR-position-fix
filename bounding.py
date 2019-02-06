@@ -122,11 +122,13 @@ def merge_bounds(bounds):
 			
 if __name__=='__main__':
 	import sys
+	import re
+	csv_format_regex = re.compile(r'(.*?)(([,]\d+){4})')
 	f = open(sys.argv[1], 'r')
 	bounds = list()
 	for l in f.readlines():
-		vals = l.split(",")
-		rect_bounds = [int(i) for i in vals[1:]]
-		bounds.append(Bound(vals[0], rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
+		matches = csv_format_regex.match(l)
+		rect_bounds = [int(i) for i in matches.group(2)[1:].split(',')]
+		bounds.append(Bound(matches.group(1), rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
 	merge_bounds(bounds)
 
