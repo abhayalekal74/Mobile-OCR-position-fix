@@ -1,0 +1,124 @@
+VERTICAL_THRES = 10
+HORIZ_THRES = 16
+
+class Bound:
+	def __init__(self, w, l, t, r, b):
+		self.word = w
+		self.left =  l
+		self.top = t
+		self.right = r
+		self.bottom = b
+		self.bound_merged = False
+
+	def print(self):
+		print (self.word, self.left, self.top, self.right, self.bottom, self.bound_merged)
+
+def merge_bounds(bounds):
+
+	"""
+	Grouping all bounds in a line into one batch
+	"""
+
+	rect_bottoms = list() # Contains rectangle bottom points
+	for b in bounds:
+		rect_bottoms.append(b.bottom)
+
+	rect_bottoms = sorted(rect_bottoms) # Sorting the rectangle bottoms in asc order
+
+	bounds.sort(key=lambda x: x.top) # Sorting bounds on rectangle tops, to batch all tops less than a rect bottom
+
+	rect_bot_counter, bounds_counter = 0, 0
+
+	batched_bounds = list() # Contains bottom point and all the tops above it
+
+	while rect_bot_counter < len(rect_bottoms) and bounds_counter < len(bounds):
+		batches = list() # Batch of all tops less than a bottom
+		while bounds_counter < len(bounds) and rect_bottoms[rect_bot_counter] >= bounds[bounds_counter].top:
+			batches.append(bounds[bounds_counter])
+			bounds_counter += 1
+		
+		batched_bounds.append([rect_bottoms[rect_bot_counter], bounds[bounds_counter - 1].top, batches]) # Adding this to the list of batches of top
+		rect_bot_counter += 1
+
+	merged_batch_bounds = list() # Merging bottoms with a difference of < 10 and the bottoms without any top batches with top batches of current bottom
+	i = 0
+	while i < len(batched_bounds):
+		if len(batched_bounds[i][2]) > 0: # If there are tops less than this bottom, add it to merged_batch_bounds
+			merged_batch_bounds.append(batched_bounds[i][2])
+		else:
+			while len(batched_bounds[i][2]) == 0: # If there are no top batches for a bottom, continue to next bottom
+				i += 1
+			merged_batch_bounds[-1] += batched_bounds[i][2]
+			cur_i = i
+			while (i + 1) < len(batched_bounds) and (abs(batched_bounds[i + 1][1] - batched_bounds[cur_i][1]) < VERTICAL_THRES): # If the difference between the tops if less than 10 for two bottoms, merge them
+				i += 1
+				merged_batch_bounds[-1] += batched_bounds[i][2]
+		i += 1
+
+	"""
+	Ordering words within a line
+	"""
+	x_ordered_batches = list() # All groups of words within a line arranged in order of x
+	for batched_bound in merged_batch_bounds:
+		# batched_bound contains all words in a line
+		batched_bound.sort(key=lambda x: x.left) # Sorting with word's starting position
+		if len(batched_bound) == 1: # If there's only one word in the line, no need to anything else
+			x_ordered_batches.append(batched_bound)
+		else: # If there is more than 1 word
+			# Merge words on the basis of y
+			for i in range(len(batched_bound)):
+				cur_batch = list()
+				if not batched_bound[i].bound_merged:
+					cur_batch.append(batched_bound[i])
+					# Checking if there are words with top and bottom similar to i'th word and also check if they are consecutive
+					for j in range(i + 1, len(batched_bound)):
+						if not batched_bound[j].bound_merged and abs(cur_batch[-1].top - batched_bound[j].top) < VERTICAL_THRES and abs(cur_batch[-1].bottom - batched_bound[j].bottom) < VERTICAL_THRES and abs(cur_batch[-1].right - batched_bound[j].left) < HORIZ_THRES:
+							batched_bound[j].bound_merged = True # Mark the word as visited
+							cur_batch.append(batched_bound[j]) # Add it to current batch of words with similar top and bottom
+				if len(cur_batch) > 0:
+					x_ordered_batches.append(cur_batch) # Add the current batch to x_ordered_batches
+
+	# Arrange overlapping groups of words in order of y (for fractions, to maintain order)
+	# Numerator and denominator should already be grouped as one batch each
+	# So just checking the consecutive batches should suffice because not more than two batches can overlap on x axis (numerator and denominator)
+	x_y_ordered_batches = list()
+	i = 0
+	while i < len(x_ordered_batches) - 1:
+		cur_batch_x_min = x_ordered_batches[i][0].left
+		cur_batch_x_max = x_ordered_batches[i][-1].right
+		next_batch_x_min = x_ordered_batches[i + 1][0].left
+		next_batch_x_max = x_ordered_batches[i + 1][-1].right
+		# Check if they overlap on X axis
+		if (((next_batch_x_min - cur_batch_x_min) + (next_batch_x_max - cur_batch_x_max)) <= ((cur_batch_x_max - cur_batch_x_min) + (next_batch_x_max - next_batch_x_min))):
+			# Lines do overlap, order these two batches on the basis of smallest top
+			smallest_top_for_cur_batch = min([b.top for b in x_ordered_batches[i]])
+			smallest_top_for_next_batch = min([b.top for b in x_ordered_batches[i + 1]])
+			if smallest_top_for_next_batch < smallest_top_for_cur_batch: # These two batches need to be reversed
+				x_y_ordered_batches.append(x_ordered_batches[i + 1])
+				x_y_ordered_batches.append(x_ordered_batches[i])
+			else: # Batches need not be reversed
+				x_y_ordered_batches.append(x_ordered_batches[i])
+				x_y_ordered_batches.append(x_ordered_batches[i + 1])
+			i += 2 # Because, both numerator and denominator batches have been processed
+		else: 
+			x_ordered_batches.append(x_ordered_batches[i])
+			i += 1 # No overlap, move on to the next word
+		
+		if (i == len(x_ordered_batches) - 1): # If only last batch is remaining
+			x_y_ordered_batches.append(x_ordered_batches[i])
+
+	for batch in x_y_ordered_batches:
+		for b in batch:
+			b.print()
+		print ()		
+			
+if __name__=='__main__':
+	import sys
+	f = open(sys.argv[1], 'r')
+	bounds = list()
+	for l in f.readlines():
+		vals = l.split(",")
+		rect_bounds = [int(i) for i in vals[1:]]
+		bounds.append(Bound(vals[0], rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
+	merge_bounds(bounds)
+
