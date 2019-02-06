@@ -112,13 +112,13 @@ def merge_bounds(bounds):
 		if (i == len(x_ordered_batches) - 1): # If only last batch is remaining
 			x_y_ordered_batches.append(x_ordered_batches[i])
 
-	print ("\nFinal Output\n")
-
+	final_output = []
 	for batch in x_y_ordered_batches:
 		for b in batch:
-			b.print()
-		print ()
+			final_output.append(b.word)
 
+	print ("\nFinal Output\n")
+	print (" ".join(final_output))
 			
 if __name__=='__main__':
 	import sys
