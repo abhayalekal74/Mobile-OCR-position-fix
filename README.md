@@ -12,3 +12,6 @@ br_bottom = bounding rectangle's bottom
 <recognized_word1>,<br_left>,<br_top>,<br_right>,<br_bottom>  
 <recognized_word2>,<br_left>,<br_top>,<br_right>,<br_bottom>  
 <recognized_word3>,<br_left>,<br_top>,<br_right>,<br_bottom>
+
+## Running the program
+python3 bounding.py <input_file>
