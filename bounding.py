@@ -31,7 +31,6 @@ class XPosMap:
 def update_x_pos_batches(x_pos_map, cur_merged_batch):
 	if len(cur_merged_batch) > 0:
 		max_right = math.ceil(cur_merged_batch[-1].right / 100.0)
-		print ("max_right", cur_merged_batch[-1].right, max_right, "\n")
 
 		for i in range(x_pos_map.max_x + 1, max_right + 1):
 			x_pos_map.pos_map[i] = []
@@ -57,9 +56,7 @@ def get_bounds_in_range(bound_of_next_batch, x_pos_map):
 
 
 def get_bottom_of_range(batches_in_range):
-	print ("get_bottom_of_range")
 	if len(batches_in_range) > 0:
-		[b.print() for  b in batches_in_range]
 		return max([b.bottom for  b in batches_in_range])
 	return 0
 
@@ -83,17 +80,9 @@ def check_if_fraction(x_pos_map, first_bound_of_next_batch, last_bound_of_next_b
 		if next_word_bottom > 0:
 			break
 		i += 1 
-
-	print ("\ncheck_if_fraction", prev_word_bottom, next_word_bottom)
-	first_bound_of_next_batch.print()
-	last_bound_of_next_batch.print()
-	print ((prev_word_bottom == 0 and (last_bound_of_next_batch.bottom - next_word_bottom) < VERTICAL_THRES))
-	print(((first_bound_of_next_batch.bottom - prev_word_bottom) < VERTICAL_THRES and (last_bound_of_next_batch.bottom - next_word_bottom) < VERTICAL_THRES))
-	print (((last_bound_of_next_batch.bottom - next_word_bottom) < VERTICAL_THRES) and next_word_bottom == 0)
-	print ()
 	
 	# If fraction is the first word in the sentence or its in between or in the end
-	return (prev_word_bottom == 0 and (last_bound_of_next_batch.bottom - next_word_bottom) < VERTICAL_THRES) or ((first_bound_of_next_batch.bottom - prev_word_bottom) < VERTICAL_THRES and (last_bound_of_next_batch.bottom - next_word_bottom) < VERTICAL_THRES) or ((first_bound_of_next_batch.bottom - prev_word_bottom) < VERTICAL_THRES and next_word_bottom == 0) 
+	return (prev_word_bottom == 0 and abs(last_bound_of_next_batch.top - next_word_bottom) < VERTICAL_THRES) or (abs(first_bound_of_next_batch.top - prev_word_bottom) < VERTICAL_THRES and abs(last_bound_of_next_batch.top - next_word_bottom) < VERTICAL_THRES) or (abs(first_bound_of_next_batch.top - prev_word_bottom) < VERTICAL_THRES and next_word_bottom == 0) 
 	
 
 def merge_bounds(bounds):
@@ -143,22 +132,10 @@ def merge_bounds(bounds):
 
 			first_bound_of_next_batch = next_batched_bounds[0]
 			last_bound_of_next_batch = next_batched_bounds[-1]
-			cur_batch_bounds_in_range_for_first_bound = get_bounds_in_range(first_bound_of_next_batch, x_pos_map)
-			cur_batch_bounds_in_range_for_last_bound = get_bounds_in_range(last_bound_of_next_batch, x_pos_map) 
+			cur_batch_bounds_in_range_for_first_bound_of_next_batch = get_bounds_in_range(first_bound_of_next_batch, x_pos_map)
+			cur_batch_bounds_in_range_for_last_bound_of_next_batch = get_bounds_in_range(last_bound_of_next_batch, x_pos_map) 
 
-			print ("\n\nfirst_bound_of_next_batch")
-			first_bound_of_next_batch.print()
-			print ("cur_batch_first")
-			cur_batch_bounds_in_range_for_first_bound[0].print()
-
-			print ("\n\nlast_bound_of_next_batch")
-			last_bound_of_next_batch.print()
-			print ("cur_batch_last")
-			cur_batch_bounds_in_range_for_first_bound[-1].print()
-
-			print (first_bound_of_next_batch.top - cur_batch_bounds_in_range_for_first_bound[0].bottom)
-
-			if ((first_bound_of_next_batch.top - cur_batch_bounds_in_range_for_first_bound[0].bottom) < VERTICAL_THRES and (last_bound_of_next_batch.top < cur_batch_bounds_in_range_for_last_bound[-1].bottom) < VERTICAL_THRES) or check_if_fraction(x_pos_map, first_bound_of_next_batch, last_bound_of_next_batch):
+			if ((first_bound_of_next_batch.top - cur_batch_bounds_in_range_for_first_bound_of_next_batch[0].bottom) < VERTICAL_THRES and (last_bound_of_next_batch.top < cur_batch_bounds_in_range_for_last_bound_of_next_batch[-1].bottom) < VERTICAL_THRES) or check_if_fraction(x_pos_map, first_bound_of_next_batch, last_bound_of_next_batch):
 				cur_merged_batch += batched_bounds[j][2]
 				update_x_pos_batches(x_pos_map, cur_merged_batch)
 				j += 1
