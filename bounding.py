@@ -1,6 +1,6 @@
 import math
 
-VERTICAL_THRES = 2 
+VERTICAL_THRES = 10 # lt is used, so keep the VERTICAL_THRES as desired_val + 1 
 HORIZ_THRES = 16
 
 class Bound:
@@ -26,6 +26,14 @@ class XPosMap:
 		for k, v in self.pos_map.items():
 			print (k) 
 			[b.print() for b in v]
+
+
+def set_vertical_thres(bounds):
+	global VERTICAL_THRES
+	sum = 0
+	for bound in bounds:
+		sum += bound.bottom - bound.top
+	VERTICAL_THRES = math.ceil(sum / (len(bounds) * 5))
 
 
 def update_x_pos_batches(x_pos_map, cur_merged_batch):
@@ -80,7 +88,7 @@ def check_if_fraction(x_pos_map, first_bound_of_next_batch, last_bound_of_next_b
 		if next_word_bottom > 0:
 			break
 		i += 1 
-	
+
 	# If fraction is the first word in the sentence or its in between or in the end
 	return (prev_word_bottom == 0 and abs(last_bound_of_next_batch.top - next_word_bottom) < VERTICAL_THRES) or (abs(first_bound_of_next_batch.top - prev_word_bottom) < VERTICAL_THRES and abs(last_bound_of_next_batch.top - next_word_bottom) < VERTICAL_THRES) or (abs(first_bound_of_next_batch.top - prev_word_bottom) < VERTICAL_THRES and next_word_bottom == 0) 
 	
@@ -220,7 +228,12 @@ if __name__=='__main__':
 	bounds = list()
 	for l in f.readlines():
 		matches = csv_format_regex.match(l)
-		rect_bounds = [int(i) for i in matches.group(2)[1:].split(',')]
-		bounds.append(Bound(matches.group(1), rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
-	merge_bounds(bounds)
+		if matches is not None and len(matches.groups()) >= 3:
+			rect_bounds = [int(i) for i in matches.group(2)[1:].split(',')]
+			bounds.append(Bound(matches.group(1), rect_bounds[0], rect_bounds[1], rect_bounds[2], rect_bounds[3]))
+	if len(bounds) > 0:
+		set_vertical_thres(bounds)
+		merge_bounds(bounds)
+	else:
+		print ("Could not read bounds")
 
