@@ -1,4 +1,6 @@
 import math
+import sys
+import re
 
 VERTICAL_THRES = 10 # lt is used, so keep the VERTICAL_THRES as desired_val + 1 
 HORIZ_THRES = 16
@@ -121,11 +123,6 @@ def merge_bounds(bounds):
 			batched_bounds.append([rect_bottoms[rect_bot_counter], bounds[bounds_counter - 1].top, batches]) # Adding this to the list of batches of top
 		rect_bot_counter += 1
 
-	print ("\n\n", len(batched_bounds), "Batched bounds\n")
-	for bound in batched_bounds:
-		[b.print() for b in bound[2]]
-		print ()
-
 	# Merge fractions if present
 	merged_batch_bounds = list()
 	i = 0 
@@ -155,10 +152,6 @@ def merge_bounds(bounds):
 			merged_batch_bounds.append(cur_merged_batch)
 		i += 1
 
-	print ("\n\nMerged bounds\n")
-	for bound in merged_batch_bounds:
-		[b.print() for b in bound]
-		print ()
 
 	"""
 	Ordering words within a line
@@ -217,14 +210,12 @@ def merge_bounds(bounds):
 		for b in batch:
 			final_output.append(b.word)
 
-	print ("\nFinal Output\n")
 	print (" ".join(final_output))
 			
-if __name__=='__main__':
-	import sys
-	import re
+
+def read_file_and_merge(fname):
 	csv_format_regex = re.compile(r'(.*?)(([,]\d+){4})')
-	f = open(sys.argv[1], 'r')
+	f = open(fname, 'r')
 	bounds = list()
 	for l in f.readlines():
 		matches = csv_format_regex.match(l)
@@ -237,3 +228,6 @@ if __name__=='__main__':
 	else:
 		print ("Could not read bounds")
 
+
+if __name__=='__main__':
+	read_file_and_merge(sys.argv[1])
